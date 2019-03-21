@@ -383,6 +383,136 @@ namespace RevitAutoSheet
         }
 
         /// <summary>
+        /// 小指"L"型房间专用的立面修改 
+        /// the function of the "L" Room
+        /// </summary>
+        /// <param name="viewSection">the Elevation need to be change</param>
+        /// <param name="elevationOffset"></param>
+        /// <param name="normal">the normal vector of the curveloop of the Elevation's border</param>
+        /// <param name="FloorThickness"></param>
+        public void spRoomElevationChange(ViewSection viewSection, double elevationOffset, XYZ normal,double FloorThickness)
+        {
+            FilteredElementCollector collector = null;
+            ViewCropRegionShapeManager vcrShanpMgr = viewSection.GetCropRegionShapeManager();
+            //获取已经创建的默认立面的剖面框边界
+            CurveLoop loop = vcrShanpMgr.GetCropShape().First();
+            //TaskDialog.Show("!", "Is a spRoom!");
+            //截面框四边遍历器
+            CurveLoopIterator iterator = loop.GetCurveLoopIterator();
+
+            Curve curve = null;//每条边界的曲线
+
+            //准备用于创建曲线的点
+            XYZ pt1 = null;
+            XYZ pt2 = null;
+            XYZ pt3 = null;
+            XYZ pt4 = null;
+            XYZ pt5 = null;
+
+            //以房间中心为原点 东边为X正方向 北边为Y正方向
+            //The location point of the room is the origin and the east is positive X and the north is positive Y
+            int IsXLine = 1;//曲线是在x轴1 在y轴-1  if the curve on X axis set 1 ,if on Y axis set -1
+            int IsAxisDirection = 1;//是轴正方向1 负方向-1 
+
+            XYZ point1 = null;//截面框边起点
+            XYZ point2 = null;//截面框边终点
+            XYZ pointBottomCk = null;//与矮墙碰撞点
+            XYZ pointBottom = null;//不与矮墙碰撞点
+            bool isFindThePoint = false;//检测是否成功得到与矮墙碰撞点
+            while (iterator.MoveNext())
+            {
+                //TaskDialog.Show("!", "22is a spRoom!");
+                //每条边的两端点上升150后再进行"碰瓷检测"
+                curve = iterator.Current;
+                point1 = curve.GetEndPoint(0);
+                point2 = curve.GetEndPoint(1);
+                point1 = new XYZ(point1.X, point1.Y, point1.Z + FloorThickness / 350);//!!!!偷了点小懒!!!!
+                point2 = new XYZ(point2.X, point2.Y, point2.Z + FloorThickness / 350);
+
+                collector = GetElementCollectorAroundPoint(point1);
+                foreach (Element elem in collector)
+                {
+                    Wall wall = elem as Wall;
+                    //获取墙的高度约束，没有值的就是矮墙
+                    //不等高且和小矮墙相交的框边为底边
+                    if (wall == null || point1.Z != point2.Z) continue;//没得到墙时或得到的边是竖边时continue
+                    if (wall.get_Parameter(BuiltInParameter.WALL_HEIGHT_TYPE).AsValueString() == "Unconnected"
+                        || wall.get_Parameter(BuiltInParameter.WALL_HEIGHT_TYPE).AsValueString() == "未连接")
+                    {
+                        pointBottomCk = point1;
+                        pointBottom = point2;
+                        isFindThePoint = true;
+                        break;
+                    }
+                }
+                if (isFindThePoint) break;//找到所要的点后跳出while
+                //TaskDialog.Show("!", "33is a spRoom!");
+                collector = GetElementCollectorAroundPoint(point2);
+                foreach (Element elem in collector)
+                {
+                    Wall wall = elem as Wall;
+                    //不等高且和小矮墙相交的框边为底边
+                    if (wall == null || point1.Z != point2.Z) continue;
+                    if (wall.get_Parameter(BuiltInParameter.WALL_HEIGHT_TYPE).AsValueString() == "Unconnected"
+                        || wall.get_Parameter(BuiltInParameter.WALL_HEIGHT_TYPE).AsValueString() == "未连接")
+                    {
+                        pointBottomCk = point2;
+                        pointBottom = point1;
+                        isFindThePoint = true;
+                        break;
+                    }
+                }
+                if (isFindThePoint) break;//找到所要的点后跳出while
+            }
+
+            if (pointBottomCk != null && pointBottom != null)
+            {
+                //TaskDialog.Show("!!", "pointCK：" + pointBottomCk.ToString() + "\npointB：" + pointBottom.ToString());
+
+                pt2 = pointBottom;
+
+                if (-0.1 < pointBottomCk.X - pointBottom.X && pointBottomCk.X - pointBottom.X < 0.1)
+                    IsXLine = 0;
+                if ((IsXLine == 1 && pointBottomCk.X - pointBottom.X < 0) || (IsXLine == 0 && pointBottomCk.Y - pointBottom.Y < 0))
+                    IsAxisDirection = -1;
+                //TaskDialog.Show("+-", "XLine:" + IsXLine.ToString() + "Axis:" + IsAxisDirection.ToString());
+
+                pt1 = new XYZ(pointBottomCk.X + (2.5 * IsAxisDirection * IsXLine), pointBottomCk.Y + (2.5 * IsAxisDirection * (1 - IsXLine)), pointBottomCk.Z);
+                pt2 = new XYZ(pt1.X, pt1.Y, pt1.Z + 11.5);
+                pt3 = new XYZ(pt2.X - (3.35 * IsAxisDirection * IsXLine), pt2.Y - (3.4 * IsAxisDirection * (1 - IsXLine)), pt2.Z);
+                pointBottom = new XYZ(pointBottom.X - (0 * IsAxisDirection * IsXLine), pointBottom.Y - (0 * IsAxisDirection * (1 - IsXLine)), pointBottom.Z);
+                pt5 = new XYZ(pointBottom.X, pointBottom.Y, pointBottom.Z + 9.15);
+                pt4 = new XYZ(pt3.X, pt3.Y, pt5.Z);
+
+                //TaskDialog.Show("point", "pt2:" + pt2.ToString() + "\npt3:" + pt3.ToString());
+                Line line1 = Line.CreateBound(pointBottom, pt1);
+                Line line2 = Line.CreateBound(pt1, pt2);
+                Line line3 = Line.CreateBound(pt2, pt3);
+                Line line4 = Line.CreateBound(pt3, pt4);
+                Line line5 = Line.CreateBound(pt4, pt5);
+                Line line6 = Line.CreateBound(pt5, pointBottom);
+
+                CurveLoop profile = new CurveLoop();
+                profile.Append(line1);
+                profile.Append(line2);
+                profile.Append(line3);
+                profile.Append(line4);
+                profile.Append(line5);
+                profile.Append(line6);
+
+                //TaskDialog.Show("new Loop", "A new Loop has been Created");
+                //profile = CurveLoop.CreateViaOffset(profile, elevationOffset / 300, normal);//!!!!偷了点小懒!!!!不同方向的L房间偏移结果可能相反，需要重新修改法向量改变
+                vcrShanpMgr.SetCropShape(profile);
+            }
+
+            else
+            {
+                TaskDialog.Show("noooooooo!", "Cant find the CKpoint");
+            }
+
+        }
+
+        /// <summary>
         /// 建立新的3D视图，并将其剖面框设为选择房间的大小
         /// create a new 3D view and change the section box fix the selected room
         /// </summary>
