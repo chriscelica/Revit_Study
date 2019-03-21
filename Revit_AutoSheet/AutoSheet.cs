@@ -1,19 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Autodesk.Revit.UI;
+﻿using Autodesk.Revit.UI;
 using Autodesk.Revit.DB;
-using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.UI.Selection;
 using Autodesk.Revit.DB.Architecture;
 
-namespace Revit_CreateRoomElevation1
+using Revit_AutoSheet;
+
+namespace RevitAutoSheet
 {
-    public class CreateRoomElevations
+    public class AutoSheet
     {
         [Transaction(TransactionMode.Manual)]
         [Regeneration(RegenerationOption.Manual)]
@@ -22,21 +17,16 @@ namespace Revit_CreateRoomElevation1
             public Result Execute(ExternalCommandData commandData,
                 ref string message, ElementSet elements)
             {
-                UIApplication uiapp = commandData.Application;
-                UIDocument uidoc = uiapp.ActiveUIDocument;
-                Document doc = uidoc.Document;
-                Selection sel = uidoc.Selection;
+                DocSet docSet = new DocSet(commandData);
 
-                Room selRoom = null;
-
-                //从选择集中获取房间
-                foreach (ElementId e in sel.GetElementIds())
+                //get the selected room from Selection
+                foreach (ElementId e in docSet.selection.GetElementIds())
                 {
-                    selRoom = doc.GetElement(e) as Room;
+                    docSet.selRoom = docSet.doc.GetElement(e) as Room;
                     break;
                 }
 
-                ControlWindow window = new ControlWindow(uiapp, selRoom);
+                ControlWindow window = new ControlWindow(docSet);
                 window.ShowDialog();
 
                 return Result.Succeeded;
