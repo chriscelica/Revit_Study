@@ -10,7 +10,7 @@ namespace RevitAutoSheet
 {
     [Transaction(TransactionMode.Manual)]
     [Regeneration(RegenerationOption.Manual)]
-    public class AutoSheet : IExternalCommand
+    public class AutoView : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData,
             ref string message, ElementSet elements)

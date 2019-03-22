@@ -51,7 +51,7 @@ namespace RevitAutoSheet
         /// <param name="e"></param>
         private void BtnRun_Click(object sender, RoutedEventArgs e)
         {
-            //
+            # region//获取各种偏移量并判断数据有效性
             double viewOffset = 0;//平面视图的偏移量
             double elevationOffset = 0;//里面的偏移量  暂时不支持"L"型房间 她的生成边框线的法向量不稳定
             double FloorThickness = 0;//地面楼板的厚度 用于将立面的底边框上抬到楼板上 used to move the bottom of Elevation up the floor
@@ -102,15 +102,14 @@ namespace RevitAutoSheet
                 TaskDialog.Show("soanumber null", "Cant find the SoA Number");
                 _SoANumber = null;
             }
+            #endregion
 
-            //
+            //实际执行
             View3D view3d = Create3DView();
             CreateNewViewPlan(viewOffset,view3d);
             CreateElevations(elevationOffset, FloorThickness);
-            
-            //CreateSheetView(view);
-
-            this.Close();
+           
+           this.Close();
         }
 
         /// <summary>
@@ -620,43 +619,44 @@ namespace RevitAutoSheet
         //
         public  void CreateSheetView(View3D view3D)
         {
-
             // Get an available title block from document
             FilteredElementCollector collector = new FilteredElementCollector(DocSet.doc);
             collector.OfClass(typeof(FamilySymbol));
             collector.OfCategory(BuiltInCategory.OST_TitleBlocks);
 
             FamilySymbol fs = collector.FirstElement() as FamilySymbol;
-            if (fs != null)
+            if (fs == null)
             {
-                using (Transaction t = new Transaction(DocSet.doc, "Create a new ViewSheet"))
+                TaskDialog.Show("1", "can not find fs");
+                return;
+            }
+            using (Transaction t = new Transaction(DocSet.doc, "Create a new ViewSheet"))
+            {
+                t.Start();
+                try
                 {
-                    t.Start();
-                    try
+                    // Create a sheet view
+                    ViewSheet viewSheet = ViewSheet.Create(DocSet.doc, fs.Id);
+                    if (null == viewSheet)
                     {
-                        // Create a sheet view
-                        ViewSheet viewSheet = ViewSheet.Create(DocSet.doc, fs.Id);
-                        if (null == viewSheet)
-                        {
-                            throw new Exception("Failed to create new ViewSheet.");
-                        }
-
-                        // Add passed in view onto the center of the sheet
-                        UV location = new UV((viewSheet.Outline.Max.U - viewSheet.Outline.Min.U) / 2,
-                                             (viewSheet.Outline.Max.V - viewSheet.Outline.Min.V) / 2);
-
-                        //viewSheet.AddView(view3D, location);
-                        Viewport.Create(DocSet.doc, viewSheet.Id, view3D.Id, new XYZ(location.U, location.V, 0));
-
-                        viewSheet.Name = "123456adasqwe";
-                        TaskDialog.Show("idsheet", viewSheet.Id.ToString());
-
-                        t.Commit();
+                        throw new Exception("Failed to create new ViewSheet.");
                     }
-                    catch
-                    {
-                        t.RollBack();
-                    }
+
+                    // Add passed in view onto the center of the sheet
+                    UV location = new UV((viewSheet.Outline.Max.U - viewSheet.Outline.Min.U) / 2,
+                                         (viewSheet.Outline.Max.V - viewSheet.Outline.Min.V) / 2);
+
+                    //viewSheet.AddView(view3D, location);
+                    Viewport.Create(DocSet.doc, viewSheet.Id, view3D.Id, new XYZ(location.U, location.V, 0));
+
+                    viewSheet.Name = "123456adasqwe";
+                    TaskDialog.Show("idsheet", viewSheet.Id.ToString());
+
+                    t.Commit();
+                }
+                catch
+                {
+                    t.RollBack();
                 }
             }
         }

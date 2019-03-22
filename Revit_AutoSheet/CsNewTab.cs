@@ -33,22 +33,32 @@ namespace Revit_AutoSheet
             panel = app.CreateRibbonPanel("ACID", "AutoElevation");
 
             //图片的生成操作必须为Resource!!!!!!!!!
-            Uri uriL = new Uri("pack://application:,,,/RevitAutoSheet;component/image/iconL.png");
-            Uri uriS = new Uri("pack://application:,,,/RevitAutoSheet;component/image/iconS.png");
-
             string thisAssemblyPath = Assembly.GetExecutingAssembly().Location;
             string folder = Path.GetDirectoryName(thisAssemblyPath);
 
-            PushButtonData pushButtonData = new PushButtonData
-                ("AutoElevation", "AutoElevation", thisAssemblyPath, "RevitAutoSheet.AutoSheet");
+            PushButtonData autoViewData = new PushButtonData
+                ("AutoView", "AutoView", thisAssemblyPath, "RevitAutoSheet.AutoView");
 
-            PushButton pushButton = panel.AddItem(pushButtonData) as PushButton;
+            PushButton autoView = panel.AddItem(autoViewData) as PushButton;
             //图标
-            pushButton.LargeImage = new BitmapImage(uriL);
-            pushButton.Image = new BitmapImage(uriS);
+            autoView.LargeImage = new BitmapImage(new Uri("pack://application:,,,/RevitAutoSheet;component/image/iconL.png"));
+            autoView.Image = new BitmapImage(new Uri("pack://application:,,,/RevitAutoSheet;component/image/iconS.png"));
             //注解
-            pushButton.ToolTip = "Create new FloorPlan, CeilingPlan, and four Elevations for the Selected Room" +
+            autoView.ToolTip = "Create a new FloorPlan, CeilingPlan, and four Elevations for the Selected Room" +
                                  "\n the Elevations will be create at the center of the \"X\" of the room";
+
+            //
+
+            //
+            PushButtonData SheetOneViewData = new PushButtonData
+                ("SheetOneView", "SheetOneView", thisAssemblyPath, "RevitAutoSheet.NewSheetsOneView");
+
+            PushButton SheetOneView = panel.AddItem(SheetOneViewData) as PushButton;
+
+            SheetOneView.LargeImage = new BitmapImage(new Uri("pack://application:,,,/RevitAutoSheet;component/image/iconL.png"));
+            SheetOneView.Image = new BitmapImage(new Uri("pack://application:,,,/RevitAutoSheet;component/image/iconS.png"));
+
+            SheetOneView.ToolTip = "sheet";
         }
     }
 }
