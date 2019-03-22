@@ -8,29 +8,26 @@ using Revit_AutoSheet;
 
 namespace RevitAutoSheet
 {
-    public class AutoSheet
+    [Transaction(TransactionMode.Manual)]
+    [Regeneration(RegenerationOption.Manual)]
+    public class AutoSheet : IExternalCommand
     {
-        [Transaction(TransactionMode.Manual)]
-        [Regeneration(RegenerationOption.Manual)]
-        public class mainClass : IExternalCommand
+        public Result Execute(ExternalCommandData commandData,
+            ref string message, ElementSet elements)
         {
-            public Result Execute(ExternalCommandData commandData,
-                ref string message, ElementSet elements)
+            DocSet docSet = new DocSet(commandData);
+
+            //get the selected room from Selection
+            foreach (ElementId e in docSet.selection.GetElementIds())
             {
-                DocSet docSet = new DocSet(commandData);
-
-                //get the selected room from Selection
-                foreach (ElementId e in docSet.selection.GetElementIds())
-                {
-                    docSet.selRoom = docSet.doc.GetElement(e) as Room;
-                    break;
-                }
-
-                ControlWindow window = new ControlWindow(docSet);
-                window.ShowDialog();
-
-                return Result.Succeeded;
+                docSet.selRoom = docSet.doc.GetElement(e) as Room;
+                break;
             }
+
+            ControlWindow window = new ControlWindow(docSet);
+            window.ShowDialog();
+
+            return Result.Succeeded;
         }
     }
 }
