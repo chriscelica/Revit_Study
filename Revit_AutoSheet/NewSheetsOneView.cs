@@ -9,7 +9,7 @@ using Autodesk.Revit.Attributes;
 using Autodesk.Revit.UI.Selection;
 using Autodesk.Revit.DB.Architecture;
 
-using Revit_AutoSheet;
+using Revit_AutoSheet.Data;
 
 namespace RevitAutoSheet
 {
@@ -17,16 +17,12 @@ namespace RevitAutoSheet
     [Regeneration(RegenerationOption.Manual)]
     public  class NewSheetsOneView :IExternalCommand
     {
-        FamilySymbol _fs = null;
+        public ElementId TbkSymbolId = null;
+
         public Result Execute(ExternalCommandData commandData,
             ref string message, ElementSet elements)
         {
             DocSet docSet = new DocSet(commandData);
-            // Get an available title block from document
-            FilteredElementCollector collector = new FilteredElementCollector(docSet.doc);
-            collector.OfClass(typeof(FamilySymbol));
-            collector.OfCategory(BuiltInCategory.OST_TitleBlocks);
-            _fs = collector.FirstElement() as FamilySymbol;
 
             //
             List<ElementId> Ids = new List<ElementId>();
@@ -36,7 +32,6 @@ namespace RevitAutoSheet
                 View view = docSet.doc.GetElement(id) as View;
                 if (view == null) continue;
                 Ids.Add(id);
-                CreateSheet(docSet, id);
             }
 
             if (Ids.Count <= 0)
@@ -45,15 +40,20 @@ namespace RevitAutoSheet
                 return Result.Succeeded;
             }
 
-            //foreach (ElementId id in Ids)
-            //{
+            TBKSelection seleWindow = new TBKSelection(docSet,this);
+            seleWindow.ShowDialog();
 
-            //}
+
+            foreach (ElementId id in Ids)
+            {
+                FamilySymbol TbkSymbol = docSet.doc.GetElement(TbkSymbolId) as FamilySymbol;
+                CreateSheet(docSet, id, TbkSymbol);
+            }
 
             return Result.Succeeded;
         }
 
-        public ViewSheet CreateSheet(DocSet docSet,ElementId id)
+        public ViewSheet CreateSheet(DocSet docSet,ElementId id, FamilySymbol fs)
         {
 
             ViewSheet viewSheet = null;
@@ -63,7 +63,7 @@ namespace RevitAutoSheet
 
                 tran.Start("Create a New sheet of" + view.ViewName);
                 // Create a sheet view
-                viewSheet = ViewSheet.Create(docSet.doc, _fs.Id);
+                viewSheet = ViewSheet.Create(docSet.doc, fs.Id);
 
                 // Add passed in view onto the center of the sheet
                 UV location = new UV(viewSheet.Outline.Min.U+0.4,

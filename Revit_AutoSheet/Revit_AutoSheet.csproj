@@ -60,14 +60,22 @@
       <DependentUpon>ControlWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="CsNewTab.cs" />
-    <Compile Include="DocSet.cs" />
+    <Compile Include="Data\DocSet.cs" />
+    <Compile Include="Data\TbkInfo.cs" />
     <Compile Include="NewSheetsOneView.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TBKSelection.xaml.cs">
+      <DependentUpon>TBKSelection.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Page Include="ControlWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="TBKSelection.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup>
