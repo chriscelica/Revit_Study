@@ -48,17 +48,24 @@ namespace Revit_AutoSheet
                                  "\n the Elevations will be create at the center of the \"X\" of the room";
 
             //
-
+            PushButtonData SheetsOneView = new PushButtonData
+                ("SheetsOneView", "SheetsOneView", thisAssemblyPath, "RevitAutoSheet.NewSheetsOneView");
+            SheetsOneView.LargeImage = new BitmapImage(new Uri("pack://application:,,,/RevitAutoSheet;component/image/iconL.png"));
+            SheetsOneView.Image = new BitmapImage(new Uri("pack://application:,,,/RevitAutoSheet;component/image/iconS.png"));
+            SheetsOneView.ToolTip = "Create a new Sheet for every selected View";
+            
             //
-            PushButtonData SheetOneViewData = new PushButtonData
-                ("SheetOneView", "SheetOneView", thisAssemblyPath, "RevitAutoSheet.NewSheetsOneView");
+            PushButtonData SheetViews = new PushButtonData
+                ("SheetViews", "SheetViews", thisAssemblyPath, "RevitAutoSheet.NewSheetManyViews");
+            SheetViews.LargeImage = new BitmapImage(new Uri("pack://application:,,,/RevitAutoSheet;component/image/iconL.png"));
+            SheetViews.Image = new BitmapImage(new Uri("pack://application:,,,/RevitAutoSheet;component/image/iconS.png"));
+            SheetViews.ToolTip = "Create a new Sheet with all selected Views";
 
-            PushButton SheetOneView = panel.AddItem(SheetOneViewData) as PushButton;
-
-            SheetOneView.LargeImage = new BitmapImage(new Uri("pack://application:,,,/RevitAutoSheet;component/image/iconL.png"));
-            SheetOneView.Image = new BitmapImage(new Uri("pack://application:,,,/RevitAutoSheet;component/image/iconS.png"));
-
-            SheetOneView.ToolTip = "sheet";
+            //创建记忆下拉菜单并将按钮添加进去
+            SplitButtonData splitButtonSheet = new SplitButtonData("SplotButtonSheet", "Split Button!");//注解完全不知道什么时候显示
+            SplitButton splitButton = panel.AddItem(splitButtonSheet) as SplitButton;
+            splitButton.AddPushButton(SheetsOneView);
+            splitButton.AddPushButton(SheetViews);
         }
     }
 }

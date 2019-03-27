@@ -14,11 +14,20 @@ namespace RevitAutoSheet
     {
         DocSet DocSet = new DocSet();
         NewSheetsOneView _oneView = null;
+        NewSheetManyViews _manyView = null;
 
         public TBKSelection(DocSet docSet, NewSheetsOneView oneView)
         {
             InitializeComponent();
             _oneView = oneView;
+            DocSet = docSet;
+            Load();
+        }
+
+        public TBKSelection(DocSet docSet, NewSheetManyViews manyView)
+        {
+            InitializeComponent();
+            _manyView = manyView;
             DocSet = docSet;
             Load();
         }
@@ -49,7 +58,8 @@ namespace RevitAutoSheet
         private void Enter_Click(object sender, RoutedEventArgs e)
         {
             TbkInfo info = this.ListView.SelectedItem as TbkInfo;
-            _oneView.TbkSymbolId = info.Id;
+            if (_oneView != null) _oneView.TbkSymbolId = info.Id;
+            if (_manyView != null) _manyView.TbkSymbolId = info.Id;
 
             this.Close();
         }
